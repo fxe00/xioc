@@ -14,6 +14,13 @@ type Iocs struct {
 	Emails  []string
 }
 
+func (ioc Iocs)IsEmpty() bool {
+	if len(ioc.Domains) == 0 && len(ioc.Ips) == 0 && len(ioc.Urls) == 0 && len(ioc.Hashs) == 0 && len(ioc.Emails) == 0 {
+		return true
+	}
+	return false
+}
+
 // 从文章中提取出ioc
 func ExtractIocs(content string) Iocs {
 	var iocs Iocs
