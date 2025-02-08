@@ -14,14 +14,14 @@ type Iocs struct {
 	Emails  []string
 }
 
-func (ioc Iocs)IsEmpty() bool {
+func (ioc Iocs) IsEmpty() bool {
 	if len(ioc.Domains) == 0 && len(ioc.Ips) == 0 && len(ioc.Urls) == 0 && len(ioc.Hashs) == 0 && len(ioc.Emails) == 0 {
 		return true
 	}
 	return false
 }
 
-// 从文章中提取出ioc
+// 从文章中提取出ioc, 有分类
 func ExtractIocs(content string) Iocs {
 	var iocs Iocs
 	iocs.Domains = ExtractDomains(content)
@@ -29,6 +29,17 @@ func ExtractIocs(content string) Iocs {
 	iocs.Urls = ExtractUrls(content)
 	iocs.Hashs = ExtractHashs(content)
 	iocs.Emails = ExtractEmails(content)
+	return iocs
+}
+
+// 从文章中提取出ioc, 无分类
+func ExtractIocsList(content string) []string {
+	var iocs []string
+	iocs = append(iocs, ExtractDomains(content)...)
+	iocs = append(iocs, ExtractIPs(content)...)
+	iocs = append(iocs, ExtractUrls(content)...)
+	iocs = append(iocs, ExtractHashs(content)...)
+	iocs = append(iocs, ExtractEmails(content)...)
 	return iocs
 }
 
@@ -115,7 +126,24 @@ func ExtractUrls(content string) []string {
 			urls = append(urls, tmpUrls...)
 		}
 	}
-	urls = RemoveDuplicates(urls)
+	// 27.102.107[.]224:8443
+	str2 := `(?i)([a-zA-Z0-9-]+(\[\.\]|\[\.|\.|\.\]|\-|\_)?)+(\[:|\]:|\[:\]|:)[0-9]+`
+	urlRegex := regexp.MustCompile(str2)
+	urls = append(urls, urlRegex.FindAllString(content, -1)...)
+	var validUrls []string
+	for _, v := range urls { // 处理不符合格式的Url地址：.、[.]、[. 或 . ]
+		var tmpV string
+		if strings.Contains(v, "[.") || strings.Contains(v, ".]") {
+			tmpV = strings.ReplaceAll(v, "[.]", ".")
+			tmpV = strings.ReplaceAll(tmpV, ".]", ".")
+			tmpV = strings.ReplaceAll(tmpV, "[.", ".")
+			tmpV = strings.ReplaceAll(tmpV, "hxxp", "http")
+		} else {
+			tmpV = v
+		}
+		validUrls = append(validUrls, strings.TrimSpace(tmpV))
+	}
+	urls = RemoveDuplicates(validUrls)
 	return urls
 }
 
@@ -125,7 +153,15 @@ func ExtractHashs(content string) []string {
 	hashRegex := regexp.MustCompile(`([a-f0-9]{64}|[a-f0-9]{40}|[a-f0-9]{32})`)
 	// 查找所有匹配的哈希值
 	hashes := hashRegex.FindAllString(content, -1)
-	hashes = RemoveDuplicates(hashes)
+	// 去掉在url里面的hash
+	urls := ExtractUrls(content)
+	newhashs := make([]string, 0)
+	for _, hash := range hashes {
+		if !contains(urls, hash) {
+			newhashs = append(newhashs, hash)
+		}
+	}
+	hashes = RemoveDuplicates(newhashs)
 	return hashes
 }
 
