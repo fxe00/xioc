@@ -8,6 +8,7 @@ import (
 
 // IsValidSuffix 检查域名后缀是否合法
 func isValidSuffix(domain string) bool {
+	domain = strings.Join(ClearIoc([]string{domain}), "")
 	splitDomain := strings.Split(domain, ".")
 	if len(splitDomain) < 2 {
 		return false

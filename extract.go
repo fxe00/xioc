@@ -46,6 +46,7 @@ func ExtractIocsList(content string) []string {
 // 使用正则表达式从文章中提取原始域名(不做清洗)
 func ExtractOriginDomains(content string) []string {
 	//domainRegex := regexp.MustCompile(`(?i)(?P<domain>[a-zA-Z0-9-]+\.[a-zA-Z]+)`)
+	// getpremiumapp[.]monster
 	// 处理兼容 .、[.]、[. 或 . ]
 	domainRegex := regexp.MustCompile(`(?i)(?P<domain>[a-zA-Z0-9]+((\[\.\]|\[\.|\.|\.\]|-)+[a-zA-Z0-9]+)+)`)
 	domains := domainRegex.FindAllStringSubmatch(content, -1)
@@ -111,8 +112,12 @@ func ExtractOriginUrls(content string) []string {
 	}
 	// 27.102.107[.]224:8443
 	str2 := `(?i)([a-zA-Z0-9-]+(\[\.\]|\[\.|\.|\.\]|\-|\_)?)+(\[:|\]:|\[:\]|:)[0-9]+`
-	urlRegex := regexp.MustCompile(str2)
-	urls = append(urls, urlRegex.FindAllString(content, -1)...)
+	urlRegex2 := regexp.MustCompile(str2)
+	urls = append(urls, urlRegex2.FindAllString(content, -1)...)
+	// ultimate-boy-bacterial-generates[.]trycloudflare[.]com/sbi
+	str3 := `(?i)([a-zA-Z0-9-]+(\[\.\]|\[\.|\.|\.\]|\-|\_)?)+((\[:|\]:|\[:\]|:)[0-9]+)?(\/[a-zA-Z0-9-]+(\[\.\]|\[\.|\.|\.\]|\-|\_)?([a-zA-Z0-9-])?)+`
+	urlRegex3 := regexp.MustCompile(str3)
+	urls = append(urls, urlRegex3.FindAllString(content, -1)...)
 	urls = RemoveDuplicates(urls)
 	return urls
 }
@@ -125,8 +130,8 @@ func ExtractUrls(content string) []string {
 
 // 使用正则表达式从文章中提取哈希值
 func ExtractHashs(content string) []string {
-	// 正则表达式，匹配MD5、SHA-1和SHA-256哈希值；优先匹配SHA-256，然后是SHA-1，最后是MD5
-	hashRegex := regexp.MustCompile(`([a-f0-9]{64}|[a-f0-9]{40}|[a-f0-9]{32})`)
+	// 正则表达式，匹配MD5、SHA-1和SHA-256哈希值还有SHA-512；优先匹配SHA-256，然后是SHA-1，最后是MD5
+	hashRegex := regexp.MustCompile(`([a-f0-9]{128}|[a-f0-9]{64}|[a-f0-9]{40}|[a-f0-9]{32})`)
 	// 查找所有匹配的哈希值
 	hashes := hashRegex.FindAllString(content, -1)
 	// 去掉在url里面的hash
@@ -142,10 +147,11 @@ func ExtractHashs(content string) []string {
 }
 
 // 使用正则表达式从文章中提取邮件地址域名，程序去掉邮件后缀域名的提取
-func ExtractEmails(content string) []string {
+func ExtractOriginEmails(content string) []string {
 	var emails, emailDomain []string
 	// 定义电子邮件的正则表达式
-	emailRegex := regexp.MustCompile(`[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`)
+	// goodsupport@cock[.]li
+	emailRegex := regexp.MustCompile(`[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\[\.\]|\[\.|\.|\.\])[a-zA-Z]{2,}`)
 	// 查找所有匹配的邮件地址
 	emails = emailRegex.FindAllString(content, -1)
 	if len(emails) > 0 {
@@ -158,6 +164,12 @@ func ExtractEmails(content string) []string {
 		return emailDomain
 	}
 	return emailDomain
+}
+
+// 使用正则表达式从文章中提取邮件地址域名，程序去掉邮件后缀域名的提取
+func ExtractEmails(content string) []string {
+	emails := ExtractOriginEmails(content)
+	return ClearIoc(emails)
 }
 
 // 检查字符串切片中是否包含特定的字符串
