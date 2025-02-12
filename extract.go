@@ -43,8 +43,8 @@ func ExtractIocsList(content string) []string {
 	return iocs
 }
 
-// 使用正则表达式从文章中提取域名
-func ExtractDomains(content string) []string {
+// 使用正则表达式从文章中提取原始域名(不做清洗)
+func ExtractOriginDomains(content string) []string {
 	//domainRegex := regexp.MustCompile(`(?i)(?P<domain>[a-zA-Z0-9-]+\.[a-zA-Z]+)`)
 	// 处理兼容 .、[.]、[. 或 . ]
 	domainRegex := regexp.MustCompile(`(?i)(?P<domain>[a-zA-Z0-9]+((\[\.\]|\[\.|\.|\.\]|-)+[a-zA-Z0-9]+)+)`)
@@ -59,21 +59,10 @@ func ExtractDomains(content string) []string {
 		}
 	}
 	uniqueDomains = RemoveDuplicates(uniqueDomains)
-	// 建议域名是否合法，输出合法的后缀域名
 	if len(uniqueDomains) > 0 {
 		for _, v := range uniqueDomains {
-			var tmpV string
-			// 增加域名中[.] 或 [. 或 .] 匹配
-			if strings.Contains(v, "[.") || strings.Contains(v, ".]") {
-				tmpV = strings.ReplaceAll(v, "[.]", ".")
-				tmpV = strings.ReplaceAll(tmpV, ".]", ".")
-				tmpV = strings.ReplaceAll(tmpV, "[.", ".")
-			} else {
-				tmpV = v
-			}
-			tmpV = strings.TrimSpace(tmpV)
-			if isValidSuffix(tmpV) {
-				validDomains = append(validDomains, tmpV)
+			if isValidSuffix(v) {
+				validDomains = append(validDomains, v)
 			}
 		}
 		return validDomains
@@ -81,35 +70,29 @@ func ExtractDomains(content string) []string {
 	return uniqueDomains
 }
 
-// 使用正则表达式从文章中提取IP地址
-func ExtractIPs(content string) []string {
+// 使用正则表达式从文章中提取域名
+func ExtractDomains(content string) []string {
+	domains := ExtractOriginDomains(content)
+	return ClearIoc(domains)
+}
+
+func ExtractOriginIPs(content string) []string {
 	//ipRegex := regexp.MustCompile(`(?i)(?:\d{1,3}\.){3}\d{1,3}`)
 	ipRegex := regexp.MustCompile(`(?i)(?:\d{1,3}(?:\[\.]|\.|\[\.|\.\])?){3}\d{1,3}`)
 	ips := ipRegex.FindAllString(content, -1)
-	// 验证IP地址的合法性
-	if len(ips) == 0 {
-		return []string{}
-	} else {
-		ips = VerifyIocIp(ips)
-	}
-	var validIps []string
-	for _, v := range ips { // 处理不符合格式的IP地址：.、[.]、[. 或 . ]
-		var tmpV string
-		if strings.Contains(v, "[.") || strings.Contains(v, ".]") {
-			tmpV = strings.ReplaceAll(v, "[.]", ".")
-			tmpV = strings.ReplaceAll(tmpV, ".]", ".")
-			tmpV = strings.ReplaceAll(tmpV, "[.", ".")
-		} else {
-			tmpV = v
-		}
-		validIps = append(validIps, strings.TrimSpace(tmpV))
-	}
-	ips = RemoveDuplicates(validIps)
+	ips = RemoveDuplicates(ips)
 	return ips
 }
 
-// 使用正则表达式从文章中提取URL
-func ExtractUrls(content string) []string {
+// 使用正则表达式从文章中提取IP地址
+func ExtractIPs(content string) []string {
+	ips := ExtractOriginIPs(content)
+	ips = ClearIoc(ips)
+	ips = VerifyIocIp(ips)
+	return ips
+}
+
+func ExtractOriginUrls(content string) []string {
 	var rep = []string{
 		"https",
 		"http",
@@ -130,21 +113,14 @@ func ExtractUrls(content string) []string {
 	str2 := `(?i)([a-zA-Z0-9-]+(\[\.\]|\[\.|\.|\.\]|\-|\_)?)+(\[:|\]:|\[:\]|:)[0-9]+`
 	urlRegex := regexp.MustCompile(str2)
 	urls = append(urls, urlRegex.FindAllString(content, -1)...)
-	var validUrls []string
-	for _, v := range urls { // 处理不符合格式的Url地址：.、[.]、[. 或 . ]
-		var tmpV string
-		if strings.Contains(v, "[.") || strings.Contains(v, ".]") {
-			tmpV = strings.ReplaceAll(v, "[.]", ".")
-			tmpV = strings.ReplaceAll(tmpV, ".]", ".")
-			tmpV = strings.ReplaceAll(tmpV, "[.", ".")
-			tmpV = strings.ReplaceAll(tmpV, "hxxp", "http")
-		} else {
-			tmpV = v
-		}
-		validUrls = append(validUrls, strings.TrimSpace(tmpV))
-	}
-	urls = RemoveDuplicates(validUrls)
+	urls = RemoveDuplicates(urls)
 	return urls
+}
+
+// 使用正则表达式从文章中提取URL
+func ExtractUrls(content string) []string {
+	urls := ExtractOriginUrls(content)
+	return ClearIoc(urls)
 }
 
 // 使用正则表达式从文章中提取哈希值
@@ -194,6 +170,20 @@ func contains(slice []string, str string) bool {
 	return false
 }
 
+func ClearIoc(iocs []string) []string {
+	var clearedIocs []string
+	for _, ioc := range iocs {
+		ioc = strings.ReplaceAll(ioc, "[.]", ".")
+		ioc = strings.ReplaceAll(ioc, ".]", ".")
+		ioc = strings.ReplaceAll(ioc, "[.", ".")
+		ioc = replaceWithCase(ioc, "hxxp", "http")
+		ioc = strings.TrimSpace(ioc)
+		clearedIocs = append(clearedIocs, ioc)
+	}
+	clearedIocs = RemoveDuplicates(clearedIocs)
+	return clearedIocs
+}
+
 // 数组去重
 func RemoveDuplicates(nums []string) []string {
 	encountered := map[string]bool{}
@@ -211,4 +201,19 @@ func RemoveDuplicates(nums []string) []string {
 	}
 
 	return result
+}
+
+// 忽略大小写的字符串替换，并保持原大小写情况
+func replaceWithCase(s, old, new string) string {
+	// 使用正则表达式匹配忽略大小写的模式
+	re := regexp.MustCompile("(?i)" + old)
+	return re.ReplaceAllStringFunc(s, func(match string) string {
+		// 保持原字符串的大小写
+		if strings.ToUpper(match) == match {
+			return strings.ToUpper(new)
+		} else if strings.ToLower(match) == match {
+			return strings.ToLower(new)
+		}
+		return new
+	})
 }
