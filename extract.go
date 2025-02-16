@@ -103,7 +103,7 @@ func ExtractOriginUrls(content string) []string {
 	var urls []string
 	for _, v := range rep {
 		// 测试通过 https[:]//a13aaa1.oss-cn-hongkong.aliyuncs[.]com/hj/MEmuSVC.exe
-		str := fmt.Sprintf(`(?i)%s?(\[:|\]:|\[:\]|:)//[a-zA-Z0-9-]+((\[\.\]|\[\.|\.|\.\]|\-|\/|\?|\_|\=|\_\=)+[a-zA-Z0-9-]+)+`, v)
+		str := fmt.Sprintf(`(?i)%s?(\[:|\]:|\[:\]|:)//[a-zA-Z0-9-]+((\[\.\]|\[\.|\.|\.\]|\-|\/|\?|\_|\=|\_\=|:[0-9]+)+[a-zA-Z0-9-]+)+`, v)
 		urlRegex := regexp.MustCompile(str)
 		tmpUrls := urlRegex.FindAllString(content, -1)
 		if len(tmpUrls) > 0 {
@@ -115,10 +115,30 @@ func ExtractOriginUrls(content string) []string {
 	urlRegex2 := regexp.MustCompile(str2)
 	urls = append(urls, urlRegex2.FindAllString(content, -1)...)
 	// ultimate-boy-bacterial-generates[.]trycloudflare[.]com/sbi
-	str3 := `(?i)([a-zA-Z0-9-]+(\[\.\]|\[\.|\.|\.\]|\-|\_)?)+((\[:|\]:|\[:\]|:)[0-9]+)?(\/[a-zA-Z0-9-]+(\[\.\]|\[\.|\.|\.\]|\-|\_)?([a-zA-Z0-9-])?)+`
+	// ultimate-boy-bacterial-generates[.]trycloudflare[.]com:7777/a.zip
+	// (\/[a-zA-Z0-9-_]+(\[\.\]|\[\.|\.|\.\]|\-|\_)?([a-zA-Z0-9-]+)?)+
+	str3 := `(?i)([a-zA-Z0-9_-]+(\[\.\]|\[\.|\.|\.\]))+[a-zA-Z0-9]+((\[:|\]:|\[:\]|:)[0-9]+)?(\/[a-zA-Z0-9-_]+)+((\[\.\]|\[\.|\.|\.\]|\-|\_)([a-zA-Z0-9-]+))?`
 	urlRegex3 := regexp.MustCompile(str3)
 	urls = append(urls, urlRegex3.FindAllString(content, -1)...)
-	urls = RemoveDuplicates(urls)
+	tmpUrls := make([]string, 0)
+	for i, v1 := range urls {
+		if strings.Contains(v1, "://") {
+			tmpUrls = append(tmpUrls, v1)
+		} else {
+			flag := true
+			for j, v2 := range urls {
+				if i != j {
+					if strings.Contains(v2, v1) {
+						flag = false
+					}
+				}
+			}
+			if flag {
+				tmpUrls = append(tmpUrls, v1)
+			}
+		}
+	}
+	urls = RemoveDuplicates(tmpUrls)
 	return urls
 }
 
