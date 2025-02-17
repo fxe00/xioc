@@ -103,7 +103,8 @@ func ExtractOriginUrls(content string) []string {
 	var urls []string
 	for _, v := range rep {
 		// 测试通过 https[:]//a13aaa1.oss-cn-hongkong.aliyuncs[.]com/hj/MEmuSVC.exe
-		str := fmt.Sprintf(`(?i)%s?(\[:|\]:|\[:\]|:)//[a-zA-Z0-9-]+((\[\.\]|\[\.|\.|\.\]|\-|\/|\?|\_|\=|\_\=|:[0-9]+)+[a-zA-Z0-9-]+)+`, v)
+		// hxxp://locahost[:]3000/BattleTank[.]rar
+		str := fmt.Sprintf(`(?i)%s?(\[:|\]:|\[:\]|:)//[a-zA-Z0-9-]+((\[\.\]|\[\.|\.|\.\]|\-|\/|\?|\_|\=|\_\=|:[0-9]+|\[:[0-9]+|:\][0-9]+|\[:\][0-9]+)+[a-zA-Z0-9-]+)+`, v)
 		urlRegex := regexp.MustCompile(str)
 		tmpUrls := urlRegex.FindAllString(content, -1)
 		if len(tmpUrls) > 0 {
