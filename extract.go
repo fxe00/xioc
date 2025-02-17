@@ -151,7 +151,7 @@ func ExtractUrls(content string) []string {
 // 使用正则表达式从文章中提取哈希值
 func ExtractHashs(content string) []string {
 	// 正则表达式，匹配MD5、SHA-1和SHA-256哈希值还有SHA-512；优先匹配SHA-256，然后是SHA-1，最后是MD5
-	hashRegex := regexp.MustCompile(`([a-f0-9]{128}|[a-f0-9]{64}|[a-f0-9]{40}|[a-f0-9]{32})`)
+	hashRegex := regexp.MustCompile(`([A-Fa-f0-9]{128}|[A-Fa-f0-9]{64}|[A-Fa-f0-9]{40}|[A-Fa-f0-9]{32})`)
 	// 查找所有匹配的哈希值
 	hashes := hashRegex.FindAllString(content, -1)
 	// 去掉在url里面的hash
@@ -159,7 +159,7 @@ func ExtractHashs(content string) []string {
 	newhashs := make([]string, 0)
 	for _, hash := range hashes {
 		if !contains(urls, hash) {
-			newhashs = append(newhashs, hash)
+			newhashs = append(newhashs, strings.ToLower(hash))
 		}
 	}
 	hashes = RemoveDuplicates(newhashs)
@@ -195,7 +195,7 @@ func ExtractEmails(content string) []string {
 // 检查字符串切片中是否包含特定的字符串
 func contains(slice []string, str string) bool {
 	for _, v := range slice {
-		if v == str {
+		if strings.Contains(strings.ToLower(v), strings.ToLower(str)) {
 			return true
 		}
 	}
