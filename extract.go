@@ -204,9 +204,15 @@ func contains(slice []string, str string) bool {
 
 func ClearUrl(urls []string) []string {
 	urls = ClearIoc(urls)
+	// cron.hour/gcc.sh 类似的需要被清理掉
 	newurls := make([]string, 0)
 	for _, url := range urls {
-		if len(ExtractDomains(url)) != 0 || len(ExtractIPs(url)) != 0 {
+		if strings.Contains(url, "/") && !strings.Contains(url, "http") {
+			u := strings.Split(url, "/")
+			if len(ExtractDomains(u[0])) != 0 || len(ExtractIPs(u[0])) != 0 {
+				newurls = append(newurls, url)
+			}
+		} else {
 			newurls = append(newurls, url)
 		}
 	}
