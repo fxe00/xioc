@@ -117,7 +117,7 @@ func ExtractOriginUrls(content string) []string {
 	// ultimate-boy-bacterial-generates[.]trycloudflare[.]com/sbi
 	// ultimate-boy-bacterial-generates[.]trycloudflare[.]com:7777/a.zip
 	// (\/[a-zA-Z0-9-_]+(\[\.\]|\[\.|\.|\.\]|\-|\_)?([a-zA-Z0-9-]+)?)+
-	str3 := `(?i)([a-zA-Z0-9_-]+(\[\.\]|\[\.|\.|\.\]))+[a-zA-Z0-9]+((\[:|\]:|\[:\]|:)[0-9]+)?(\/[a-zA-Z0-9-_]+)+((\[\.\]|\[\.|\.|\.\]|\-|\_)([a-zA-Z0-9-]+))?`
+	str3 := `(?i)([a-zA-Z0-9_-]+(\[\.\]|\[\.|\.|\.\]))+[a-zA-Z0-9]+((\[:|\]:|\[:\]|:)[0-9]+)?(\/[a-zA-Z0-9-_]+)+((\[\.\]|\[\.|\.|\.\]|\-|\_)([a-zA-Z0-9-]+))?(\?[a-zA-Z0-9-_=]+)?`
 	urlRegex3 := regexp.MustCompile(str3)
 	urls = append(urls, urlRegex3.FindAllString(content, -1)...)
 	tmpUrls := make([]string, 0)
