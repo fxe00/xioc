@@ -203,6 +203,7 @@ func contains(slice []string, str string) bool {
 }
 
 func ClearUrl(urls []string) []string {
+	// 先处理格式问题
 	urls = ClearIoc(urls)
 	// cron.hour/gcc.sh 类似的需要被清理掉
 	newurls := make([]string, 0)
@@ -216,15 +217,25 @@ func ClearUrl(urls []string) []string {
 			newurls = append(newurls, url)
 		}
 	}
-	return newurls
+	// 去除同时包含http://65.108.20.73/BattleTank.exe和65.108.20.73/BattleTank.exe的情况
+	newurls2 := make([]string, 0)
+	for _, url := range newurls {
+		if !strings.Contains(url, "http") {
+			if !(contains(newurls, "http://"+url) || contains(newurls, "https://"+url)) {
+				newurls2 = append(newurls2, url)
+			}
+		} else {
+			newurls2 = append(newurls2, url)
+		}
+	}
+	return newurls2
 }
 
 func ClearIoc(iocs []string) []string {
 	var clearedIocs []string
 	for _, ioc := range iocs {
-		ioc = strings.ReplaceAll(ioc, "[.]", ".")
-		ioc = strings.ReplaceAll(ioc, ".]", ".")
-		ioc = strings.ReplaceAll(ioc, "[.", ".")
+		ioc = strings.ReplaceAll(ioc, "[", "")
+		ioc = strings.ReplaceAll(ioc, "]", "")
 		ioc = replaceWithCase(ioc, "hxxp", "http")
 		ioc = strings.TrimSpace(ioc)
 		clearedIocs = append(clearedIocs, ioc)
