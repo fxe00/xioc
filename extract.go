@@ -145,7 +145,7 @@ func ExtractOriginUrls(content string) []string {
 // 使用正则表达式从文章中提取URL
 func ExtractUrls(content string) []string {
 	urls := ExtractOriginUrls(content)
-	return ClearIoc(urls)
+	return ClearUrl(urls)
 }
 
 // 使用正则表达式从文章中提取哈希值
@@ -200,6 +200,17 @@ func contains(slice []string, str string) bool {
 		}
 	}
 	return false
+}
+
+func ClearUrl(urls []string) []string {
+	urls = ClearIoc(urls)
+	newurls := make([]string, 0)
+	for _, url := range urls {
+		if len(ExtractDomains(url)) != 0 || len(ExtractIPs(url)) != 0 {
+			newurls = append(newurls, url)
+		}
+	}
+	return newurls
 }
 
 func ClearIoc(iocs []string) []string {
