@@ -209,7 +209,7 @@ func ClearUrl(urls []string) []string {
 	// cron.hour/gcc.sh 类似的需要被清理掉
 	newurls := make([]string, 0)
 	for _, url := range urls {
-		if strings.Contains(url, "/") || strings.Contains(url, ":") && !strings.Contains(url, "http") {
+		if (strings.Contains(url, "/") || strings.Contains(url, ":")) && !strings.Contains(url, "http") {
 			var u = make([]string, 0)
 			if strings.Contains(url, "/") {
 				u = strings.Split(url, "/")
