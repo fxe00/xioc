@@ -41,7 +41,7 @@ func VerifyIocIp(str []string) []string {
 	for _, v := range str {
 		// 使用 net.ParseIP 尝试解析 IP 地址
 		parsedIP := net.ParseIP(v)
-		if parsedIP == nil || v == "127.0.0.1" {
+		if parsedIP == nil || v == "127.0.0.1" || v == "0.0.0.0" {
 			continue
 		}
 		// 检查IP是否属于私有地址范围
