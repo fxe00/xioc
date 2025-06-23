@@ -128,7 +128,7 @@ func ExtractOriginUrls(content string) []string {
 		} else {
 			flag := true
 			for j, v2 := range urls {
-				if i != j {
+				if i != j && v1 != v2 {
 					if strings.Contains(v2, v1) {
 						flag = false
 					}
